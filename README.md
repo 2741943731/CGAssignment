@@ -49,10 +49,218 @@ virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v
 }
 ```
 
-
 ## 三、为场景物体添加纹理
 
+首先使用stb_image库中的函数从图像中获取像素数据及其坐标，在`hit_record`结构体中加上纹理坐标变量u、v，使得计算碰撞点时还得到纹理坐标。 同时在sphere类中加上计算纹理坐标的`get_sphere_uv`函数，并在计算碰撞的`hit`函数例调用它。
+
+首先计算经度：
+$$
+\phi = \arctan2(p.z(), p.x())
+$$
+	然后计算纬度：
+$$
+\theta = \arcsin(p.y())
+$$
+	再计算U坐标：
+$$
+u = 1 - \frac{\phi + \pi}{2\pi}
+$$
+	计算V坐标：
+$$
+v = \frac{\theta + \frac{\pi}{2}}{\pi}
+$$
+	最后得到将纹理映射到球体的函数。
+
+```
+void get_sphere_uv(const vec3& p, double& u, double& v) {
+    auto phi = atan2(p.z(), p.x());
+    auto theta = asin(p.y());
+    u = 1 - (phi + pi) / (2 * pi);
+    v = (theta + pi / 2) / pi;
+}
+```
+
 ## 四、支持网格模型加载
+
+此项目通过创建三角形片元渲染类triangle.h以实现对obj网格模型文件的加载，并编写obj_input类实现对.obj文件中的点面数据的读取。
+
+#### 1. 网格模型文件(.obj)读取的实现
+
+读取有以下接口：
+
+`filename`：要加载的 `.obj` 文件的路径。
+
+`vertices`：三维空间中的点集。
+
+`normals`：法向量。
+
+`faces`：包含构成该面的顶点索引。
+
+`materialFaces`：面所对应的颜色或材质属性。
+
+```
+static bool loadOBJ(
+        const std::string& filename, 
+        std::vector<point3>& vertices, 
+        std::vector<vec3>& normals, 
+        std::vector<vec3>& texCoords, 
+        std::vector<std::vector<int>>& faces,
+        std::map<std::vector<int>, vec3>& materialFaces)
+```
+
+​	
+
+将文件打开后遍历一遍，根据类型将所有顶点信息、法向量信息及面信息压入vector中。
+
+	std::string line;
+	vec3 currentColor;
+	while (std::getline(file, line)) {
+	    std::istringstream iss(line);
+	    std::string type;
+	    iss >> type;
+	
+	    if (type == "v") {
+	        point3 vertex;
+	        iss >> vertex[0] >> vertex[1] >> vertex[2];
+	        vertices.push_back(vertex);
+	    }
+	    else if (type == "vn") {
+	        vec3 normal;
+	        iss >> normal[0] >> normal[1] >> normal[2];
+	        normals.push_back(normal);
+	    }
+	    else if (type == "vt") {
+	        vec3 texCoord;
+	        iss >> texCoord[0] >> texCoord[1];
+	        texCoords.push_back(texCoord);
+	    }
+	    else if (type == "f") {
+	        std::vector<int> face;
+	        std::string vertexStr;
+	        while (iss >> vertexStr) {
+	            std::istringstream vss(vertexStr);
+	            std::string vertexIndexStr;
+	            std::getline(vss, vertexIndexStr, '/');
+	            int vertexIndex = std::stoi(vertexIndexStr) - 1; // Convert 1-based indices to 0-based
+	            face.push_back(vertexIndex);
+	        }
+	        faces.push_back(face);
+	        //auto p = std::make_pair(face, currentColor);
+	        //materialFaces.insert(std::make_pair(face, currentColor));
+	        materialFaces[face] = currentColor;
+
+
+
+#### 2.triangle类
+
+##### 成员变量：
+
+- `vec3 vertex0`：三角形的第一个顶点。
+
+- `vec3 vertex1`：三角形的第二个顶点。
+
+- `vec3 vertex2`：三角形的第三个顶点。
+
+- `shared_ptr<material> mat_ptr`：表示三角形的材料属性的智能指针。
+
+##### 构造函数：
+
+- `triangle(const vec3& v0, const vec3& v1, const vec3& v2, shared_ptr<material> mat)`：构造函数，初始化三角形的三个顶点和材料属性。
+
+##### 成员函数：
+
+`virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override`：用于检测射线是否与三角形相交。重写了 `hittable` 类中的 `hit` 方法。
+
+`virtual bool bounding_box(double t0, double t1, aabb& box) const override`：用于计算三角形的轴对齐边界框。
+
+```
+
+class triangle : public hittable {
+public:
+    triangle(const vec3& v0, const vec3& v1, const vec3& v2, shared_ptr<material> mat)
+        : vertex0(v0), vertex1(v1), vertex2(v2), mat_ptr(mat) {}
+
+    virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override {
+        vec3 edge1 = vertex1 - vertex0;
+        vec3 edge2 = vertex2 - vertex0;
+        vec3 h = cross(r.direction(), edge2);
+        double a = dot(edge1, h);
+        if (a > -0.00001 && a < 0.00001)
+            return false;
+        double f = 1.0 / a;
+        vec3 s = r.origin() - vertex0;
+        double u = f * dot(s, h);
+        if (u < 0.0 || u > 1.0)
+            return false;
+        vec3 q = cross(s, edge1);
+        double v = f * dot(r.direction(), q);
+        if (v < 0.0 || u + v > 1.0)
+            return false;
+        double t = f * dot(edge2, q);
+        if (t < t_min || t > t_max)
+            return false;
+        rec.t = t;
+        rec.p = r.at(t);
+        rec.mat_ptr = mat_ptr;
+        vec3 normal = face_normal(vertex0, vertex1, vertex2);
+        rec.set_face_normal(r, normal);
+        return true;
+    }
+
+    virtual bool bounding_box(double t0, double t1, aabb& box) const override {
+        vec3 min = minxyz(minxyz(vertex0, vertex1), vertex2);
+        vec3 max = maxxyz(maxxyz(vertex0, vertex1), vertex2);
+        box = aabb(min, max);
+        return true;
+    }
+
+private:
+    vec3 vertex0;
+    vec3 vertex1;
+    vec3 vertex2;
+    shared_ptr<material> mat_ptr;
+};
+```
+
+
+
+`load_obj_model` 的函数，它用于从 `.obj` 文件中加载3D模型，并将其转换为一个由多个 `triangle` 对象组成的列表。添加点进入三角形的同时，还加入了`rotation`旋转矩阵与`move`平移矩阵对全体点进行旋转移动以达到对模型进行放缩、旋转及移动的效果。
+
+```
+static hittable_list load_obj_model(const std::string& filename, std::shared_ptr<material> mat, hittable_list& world, std::vector<std::vector<double>> matrix, vec3 move) {
+    std::vector<point3> vertices;
+    std::vector<vec3> normals;
+    std::vector<vec3> texCoords;
+    std::vector<std::vector<int>> faces;
+    std::map<std::vector<int>, vec3> materialFaces;
+
+    OBJINPUT::loadOBJ(filename, vertices, normals, texCoords, faces, materialFaces);
+
+    //std::cout << "test" << std::endl;
+
+    for (int i = 0; i < vertices.size(); ++i) {
+        rotation(vertices[i], matrix);
+        vertices[i] += move;
+    }
+
+    //hittable_list obj_triangles;
+    for (const auto& face : faces) {
+        for (size_t i = 0; i < face.size() - 2; ++i) {
+            int v0_idx = face[0], v1_idx = face[i + 1], v2_idx = face[i + 2];
+            //rotation(vertices[v0_idx], matrix);
+            //rotation(vertices[v1_idx], matrix);
+            //rotation(vertices[v2_idx], matrix);
+            vec3 tempColor = materialFaces[face];
+            world.add(make_shared<triangle>(
+                vertices[v0_idx], vertices[v1_idx], vertices[v2_idx], make_shared<lambertian>(tempColor)));
+        }
+    }
+
+    return world;
+}
+```
+
+
 
 ## 五、使用蒙特卡洛积分方法求解渲染方程
 
