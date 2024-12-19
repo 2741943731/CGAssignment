@@ -51,8 +51,8 @@ virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v
 
 #### 实现效果
 
-#### ![image-20241219234733992](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219234733992.png)
-
+![image-20241219234733992]
+(https://github.com/2741943731/CGAssignment/blob/main/readme_img/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-12-19%20234713.png)
 由于聚光灯的效果实现基于射线与聚光灯方向的夹角，因此在射线直射聚光灯时不会返回光线，因此也就呈现黑色，可以通过修改外切角来让聚光灯呈现发光的效果。
 
 ## 三、为场景物体添加纹理
@@ -471,11 +471,11 @@ for (int t = 0; t < num_threads; ++t) {
 
 添加多线程后理论上时间变为`1/线程数`，但是实际上各种原因导致加速效果没有那么理想
 
-![image-20241219235412389](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219235412389.png)
+![image-20241219235412389](https://github.com/2741943731/CGAssignment/blob/main/readme_img/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-12-19%20235409.png)
 
 ## 七、最终效果
 
-![image-20241219232012854](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219232012854.png)
+![image-20241219232012854](https://github.com/2741943731/CGAssignment/blob/main/readme_img/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-12-19%20232011.png)
 
 ## 八、分工情况
 
