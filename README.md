@@ -51,8 +51,7 @@ virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v
 
 #### 实现效果
 
-![image-20241219234733992]
-(https://github.com/2741943731/CGAssignment/blob/main/readme_img/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-12-19%20234713.png)
+![image-20241219234733992](https://github.com/2741943731/CGAssignment/blob/main/readme_img/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202024-12-19%20234713.png)
 由于聚光灯的效果实现基于射线与聚光灯方向的夹角，因此在射线直射聚光灯时不会返回光线，因此也就呈现黑色，可以通过修改外切角来让聚光灯呈现发光的效果。
 
 ## 三、为场景物体添加纹理
