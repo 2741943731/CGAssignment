@@ -160,11 +160,11 @@ public:
 
     virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v,
         const point3& p) const override {
-        float theta = dot(unit_vector(r_in.direction()), light_direction);
+        float theta = dot(unit_vector(r_in.direction()), -light_direction);
         float epsilon = cutOff - outerCutOff;
         float intensity = clamp((theta - outerCutOff) / epsilon, 0.0, 1.0);
-            return intensity * emit->value(u, v, p);
-
+        intensity = pow(intensity, 1.8);
+        return intensity * emit->value(u, v, p);
     }
 
 public:
