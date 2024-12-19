@@ -198,9 +198,25 @@ hittable_list simple_light() {
 hittable_list cornell_box() {
 	hittable_list objects;
 
+	std::vector<std::vector<double>> rotation = { {3.535, -3.535, 0.0f}, {0.0f, 0.0f, -5.0f}, {3.535f, 3.535f, 0.0f}};
+	vec3 move(400.0f, 50.0f, 80.0f);
+
+	load_obj_model("../assets/SwordMinecraft.obj", make_shared<lambertian>(vec3(0.5, 0.7, 1.0)), objects, rotation, move);
+
+	int nx, ny, nn;
+	auto tex_data = stbi_load("../assets/1.jpg", &nx, &ny, &nn, 0);
+	auto emat1 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
+
+	tex_data = stbi_load("../assets/tmp.jpg", &nx, &ny, &nn, 0);
+	auto emat2 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
+
+	tex_data = stbi_load("../assets/3.jpg", &nx, &ny, &nn, 0);
+	auto emat3 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
+
 	auto red = make_shared<lambertian>(color(.65, .05, .05));
 	auto white = make_shared<lambertian>(color(.73, .73, .73));
 	auto green = make_shared<lambertian>(color(.12, .45, .15));
+	auto skyblue = make_shared<lambertian>(color(.5, .7, 1.0));
 	auto light = make_shared<diffuse_light>(make_shared<constant_texture>(vec3(15, 15, 15)));
 
 	objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
@@ -216,8 +232,23 @@ hittable_list cornell_box() {
 	box1 = make_shared<translate>(box1, vec3(265, 0, 295));
 	objects.add(box1);
 
+	shared_ptr<hittable> box2 = make_shared<box>(point3(0, 0, 0), point3(130, 130, 130), skyblue);
+	box2 = make_shared<rotate_y>(box2, 30);
+	box2 = make_shared<translate>(box2, vec3(50, 0, 370));
+	objects.add(box2);
+
+	shared_ptr<hittable> chest = make_shared<box>(point3(0, 0, 0), point3(100, 100, 100), emat1, emat2, emat3);
+	chest = make_shared<rotate_y>(chest, -15);
+	chest = make_shared<translate>(chest, vec3(100, 130, 350));
+	objects.add(chest);
+
 	auto glass = make_shared<dielectric>(1.5);
-	objects.add(make_shared<sphere>(point3(190, 90, 190), 90, glass));
+	objects.add(make_shared<sphere>(point3(100, 45, 100), 45, glass));
+
+	//shared_ptr<hittable> chest = make_shared<box>(point3(0, 0, 0), point3(100, 100, 100), emat1);
+	//chest = make_shared<rotate_y>(chest, -15);
+	//chest = make_shared<translate>(chest, vec3(150, 0, 150));
+	//objects.add(chest);
 
 	return objects;
 }
