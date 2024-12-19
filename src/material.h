@@ -146,6 +146,34 @@ public:
     shared_ptr<texture> emit;
 };
 
+class spot_light : public material {
+public:
+    // a:颜色，light_dir：光线方向, cutOff：切光角、聚光半径
+    spot_light(shared_ptr<texture> a, vec3 light_dir, float cutOff, float ocf) 
+        : emit(a), light_direction(light_dir), cutOff(cutOff), outerCutOff(ocf){}
+
+    virtual bool scatter(
+        const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered
+    )  const {
+        return false;
+    }
+
+    virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v,
+        const point3& p) const override {
+        float theta = dot(unit_vector(r_in.direction()), light_direction);
+        float epsilon = cutOff - outerCutOff;
+        float intensity = clamp((theta - outerCutOff) / epsilon, 0.0, 1.0);
+            return intensity * emit->value(u, v, p);
+
+    }
+
+public:
+    shared_ptr<texture> emit;
+    vec3 light_direction;
+    float cutOff;
+    float outerCutOff;
+};
+
 class isotropic : public material {
 public:
     isotropic(shared_ptr<texture> a) : albedo(a) {}
