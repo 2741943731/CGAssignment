@@ -1,14 +1,14 @@
-# `<center>` 中山大学计算机学院
+<center> <b><font size = 8>中山大学计算机学院<br>计算机图形学<br>期末作业报告</font></b></center>
 
-# `<center>` 计算机图形学
+| 课程         | 组员                       |
+| ------------ | -------------------------- |
+| 计算机图形学 | 姚嘉洛、魏瑜、吴琦、周桐欣 |
 
-# `<center>` 期末作业报告
 
-<center> 课程名称：Computer graphics </center>
 
 ## 一、项目内容介绍
 
-我们小组完成的任务是光线追踪渲染器完善的任务。跟着Assignment4的任务，我们已经实现了简单的光纤追踪器的功能，其中包括了超采样、景深、球类和立方体的类实现、运动模糊、BVH树等诸多内容。我们按照任务要求，主要从以下五个方面对这个基本的光线追踪渲染器进行了完善
+我们小组完成的任务是光线追踪渲染器完善的任务。跟着`Assignment4`的任务，我们已经实现了简单的光纤追踪器的功能，其中包括了超采样、景深、球类和立方体的类实现、运动模糊、`BVH`树等诸多内容。我们按照任务要求，主要从以下五个方面对这个基本的光线追踪渲染器进行了完善
 
 1. 更多的光源类型：实现了面光源、聚光灯、
 2. 为场景中的物体添加了更多更丰富的纹理
@@ -49,6 +49,11 @@ virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v
 }
 ```
 
+#### 实现效果
+
+#### ![image-20241219234733992](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219234733992.png)
+
+由于聚光灯的效果实现基于射线与聚光灯方向的夹角，因此在射线直射聚光灯时不会返回光线，因此也就呈现黑色，可以通过修改外切角来让聚光灯呈现发光的效果。
 
 ## 三、为场景物体添加纹理
 
@@ -57,20 +62,21 @@ virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v
 $$
 \phi = \arctan2(p.z(), p.x())
 $$
-	然后计算纬度：
+然后计算纬度：
 $$
 \theta = \arcsin(p.y())
 $$
-	再计算U坐标：
+再计算U坐标：
 $$
 u = 1 - \frac{\phi + \pi}{2\pi}
 $$
-	计算V坐标：
+计算V坐标：
 $$
 v = \frac{\theta + \frac{\pi}{2}}{\pi}
 $$
-	最后得到将纹理映射到球体的函数。
-```
+最后得到将纹理映射到球体的函数。
+
+```C++
 void get_sphere_uv(const vec3& p, double& u, double& v) {
     auto phi = atan2(p.z(), p.x());
     auto theta = asin(p.y());
@@ -87,7 +93,7 @@ void get_sphere_uv(const vec3& p, double& u, double& v) {
 `normals`：法向量。
 `faces`：包含构成该面的顶点索引。
 `materialFaces`：面所对应的颜色或材质属性。
-```
+```C++
 static bool loadOBJ(
         const std::string& filename, 
         std::vector<point3>& vertices, 
@@ -98,43 +104,45 @@ static bool loadOBJ(
 ```
 ​	
 将文件打开后遍历一遍，根据类型将所有顶点信息、法向量信息及面信息压入vector中。
-	std::string line;
-	vec3 currentColor;
-	while (std::getline(file, line)) {
-	    std::istringstream iss(line);
-	    std::string type;
-	    iss >> type;
-	
-	    if (type == "v") {
-	        point3 vertex;
-	        iss >> vertex[0] >> vertex[1] >> vertex[2];
-	        vertices.push_back(vertex);
-	    }
-	    else if (type == "vn") {
-	        vec3 normal;
-	        iss >> normal[0] >> normal[1] >> normal[2];
-	        normals.push_back(normal);
-	    }
-	    else if (type == "vt") {
-	        vec3 texCoord;
-	        iss >> texCoord[0] >> texCoord[1];
-	        texCoords.push_back(texCoord);
-	    }
-	    else if (type == "f") {
-	        std::vector<int> face;
-	        std::string vertexStr;
-	        while (iss >> vertexStr) {
-	            std::istringstream vss(vertexStr);
-	            std::string vertexIndexStr;
-	            std::getline(vss, vertexIndexStr, '/');
-	            int vertexIndex = std::stoi(vertexIndexStr) - 1; // Convert 1-based indices to 0-based
-	            face.push_back(vertexIndex);
-	        }
-	        faces.push_back(face);
-	        //auto p = std::make_pair(face, currentColor);
-	        //materialFaces.insert(std::make_pair(face, currentColor));
-	        materialFaces[face] = currentColor;
-#### 2.triangle类
+​	std::string line;
+​	vec3 currentColor;
+​	while (std::getline(file, line)) {
+​	    std::istringstream iss(line);
+​	    std::string type;
+​	    iss >> type;
+​	
+```c++
+    if (type == "v") {
+        point3 vertex;
+        iss >> vertex[0] >> vertex[1] >> vertex[2];
+        vertices.push_back(vertex);
+    }
+    else if (type == "vn") {
+        vec3 normal;
+        iss >> normal[0] >> normal[1] >> normal[2];
+        normals.push_back(normal);
+    }
+    else if (type == "vt") {
+        vec3 texCoord;
+        iss >> texCoord[0] >> texCoord[1];
+        texCoords.push_back(texCoord);
+    }
+    else if (type == "f") {
+        std::vector<int> face;
+        std::string vertexStr;
+        while (iss >> vertexStr) {
+            std::istringstream vss(vertexStr);
+            std::string vertexIndexStr;
+            std::getline(vss, vertexIndexStr, '/');
+            int vertexIndex = std::stoi(vertexIndexStr) - 1; // Convert 1-based indices to 0-based
+            face.push_back(vertexIndex);
+        }
+        faces.push_back(face);
+        //auto p = std::make_pair(face, currentColor);
+        //materialFaces.insert(std::make_pair(face, currentColor));
+        materialFaces[face] = currentColor;
+```
+#### 2.`triangle`类
 ##### 成员变量：
 - `vec3 vertex0`：三角形的第一个顶点。
 - `vec3 vertex1`：三角形的第二个顶点。
@@ -145,7 +153,7 @@ static bool loadOBJ(
 ##### 成员函数：
 `virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override`：用于检测射线是否与三角形相交。重写了 `hittable` 类中的 `hit` 方法。
 `virtual bool bounding_box(double t0, double t1, aabb& box) const override`：用于计算三角形的轴对齐边界框。
-```
+```c++
 class triangle : public hittable {
 public:
     triangle(const vec3& v0, const vec3& v1, const vec3& v2, shared_ptr<material> mat)
@@ -190,7 +198,7 @@ private:
 };
 ```
 `load_obj_model` 的函数，它用于从 `.obj` 文件中加载3D模型，并将其转换为一个由多个 `triangle` 对象组成的列表。添加点进入三角形的同时，还加入了`rotation`旋转矩阵与`move`平移矩阵对全体点进行旋转移动以达到对模型进行放缩、旋转及移动的效果。
-```
+```c++
 static hittable_list load_obj_model(const std::string& filename, std::shared_ptr<material> mat, hittable_list& world, std::vector<std::vector<double>> matrix, vec3 move) {
     std::vector<point3> vertices;
     std::vector<vec3> normals;
@@ -273,6 +281,150 @@ $$
 
 其中，`f(x)`是被积函数，`N`是采样点数，`x_i`是随机采样点。
 
+### 5.4 混合密度
+
+混合密度技术可以通过使用混合概率密度函数，同时考虑平均照明和反射，以减少噪声：
+
+```C++
+class mixture_pdf : public pdf {
+    public:
+        mixture_pdf(shared_ptr<pdf> p0, shared_ptr<pdf> p1) {
+            p[0] = p0;
+            p[1] = p1;
+        }
+
+        virtual double value(const vec3& direction) const override {
+            return 0.5 * p[0]->value(direction) + 0.5 *p[1]->value(direction);
+        }
+
+        virtual vec3 generate() const override {
+            if (random_double() < 0.5)
+                return p[0]->generate();
+            else
+                return p[1]->generate();
+        }
+
+    public:
+        shared_ptr<pdf> p[2];
+};
+```
+
+可以使用专门的hittable_pdf来对物体进行采样：
+
+```C++
+class hittable_pdf : public pdf {
+    public:
+        hittable_pdf(shared_ptr<hittable> p, const point3& origin) : ptr(p), o(origin) {}
+
+        virtual double value(const vec3& direction) const override {
+            return ptr->pdf_value(o, direction);
+        }
+
+        virtual vec3 generate() const override {
+            return ptr->random(o);
+        }
+
+    public:
+        point3 o;
+        shared_ptr<hittable> ptr;
+};
+```
+
+### 5.5 材质的`PDF`调用
+
+```C++
+struct scatter_record {
+    ray specular_ray;
+    bool is_specular;
+    color attenuation;
+    shared_ptr<pdf> pdf_ptr;
+};
+
+class material {
+public:
+
+    virtual bool scatter(
+        const ray& r_in, const hit_record& rec, scatter_record& srec
+    ) const {
+        return false;
+    }
+
+    virtual double scattering_pdf(
+        const ray& r_in, const hit_record& rec, const ray& scattered
+    ) const {
+        return 0;
+    }
+
+    virtual color emitted(
+        const ray& r_in, const hit_record& rec, double u, double v, const point3& p
+    ) const {
+        return color(0, 0, 0);
+    }
+};
+
+```
+
+`Lamberian`:
+
+```C++
+virtual bool scatter(
+    const ray& r_in, const hit_record& rec, scatter_record& srec
+) const override {
+    srec.is_specular = false;
+    srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+    srec.pdf_ptr = std::make_unique<cosine_pdf>(rec.normal);
+    return true;
+}
+double scattering_pdf(
+    const ray& r_in, const hit_record& rec, const ray& scattered
+) const {
+    auto cosine = dot(rec.normal, unit_vector(scattered.direction()));
+    return cosine < 0 ? 0 : cosine / pi;
+}
+```
+
+`metal`:
+
+```C++
+virtual bool scatter(
+    const ray& r_in, const hit_record& rec, scatter_record& srec
+) const override {
+    vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+    srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere());
+    srec.attenuation = albedo;
+    srec.is_specular = true;
+    srec.pdf_ptr = 0;
+    return true;
+}
+```
+
+`directlet`:
+
+```C++
+virtual bool scatter(
+    const ray& r_in, const hit_record& rec, scatter_record& srec
+) const override {
+    srec.is_specular = true;
+    srec.pdf_ptr = nullptr;
+    srec.attenuation = color(1.0, 1.0, 1.0);
+    double refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
+
+    vec3 unit_direction = unit_vector(r_in.direction());
+    double cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0);
+    double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+
+    bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+    vec3 direction;
+
+    if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
+        direction = reflect(unit_direction, rec.normal);
+    else
+        direction = refract(unit_direction, rec.normal, refraction_ratio);
+
+    srec.specular_ray = ray(rec.p, direction, r_in.time());
+    return true;
+}
+```
 
 ## 六、支持多线程加速渲染计算过程
 
@@ -280,7 +432,7 @@ $$
 
 **具体代码：**
 
-```
+```C++
 // 渲染函数，现在接受图像的一部分作为参数
 void render_strip(int start_row, int end_row,const camera &cam, color background, const hittable& world) {
 	for (int j = start_row; j < end_row; j++) {
@@ -317,8 +469,18 @@ for (int t = 0; t < num_threads; ++t) {
 
 ```
 
+添加多线程后理论上时间变为`1/线程数`，但是实际上各种原因导致加速效果没有那么理想
+
+![image-20241219235412389](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219235412389.png)
+
 ## 七、最终效果
+
+![image-20241219232012854](C:\Users\HONOR\AppData\Roaming\Typora\typora-user-images\image-20241219232012854.png)
 
 ## 八、分工情况
 
+姚嘉洛：完成聚光灯的编写，并且参与实现蒙特卡洛积分方法求解渲染方程部分的代码，参与最终场景的布置。
+
 吴琦：完成了多线程并行加速计算过程，并且参与实现蒙特卡洛积分方法求解渲染方程部分的代码，并且解决了《the rest of your life》教程中代码存在的诸多bug，使得程序正确运行。
+
+魏瑜：完成obj.模型文件的读取，以及纹理的添加。
