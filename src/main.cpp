@@ -222,6 +222,7 @@ hittable_list cornell_box() {
 	objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
 	objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
 	objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+	objects.add(make_shared<sphere>(point3(250, 100, 200), 30, light));
 	objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
 	objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
 	objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
@@ -435,7 +436,8 @@ void rendering()
 
 	auto lights = make_shared<hittable_list>();
 	lights->add(make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>()));
-	lights->add(make_shared<sphere>(point3(190, 90, 190), 90, shared_ptr<material>()));
+	lights->add(make_shared<sphere>(point3(100, 45, 100), 45, shared_ptr<material>()));
+	lights->add(make_shared<sphere>(point3(250, 100, 200), 30, shared_ptr<material>()));
 	hittable_list world = cornell_box();
 
 	bvh_node tree(world, 0, 1);
