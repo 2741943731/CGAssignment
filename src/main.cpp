@@ -53,10 +53,10 @@ static std::vector<std::vector<color>> gCanvas;		//Canvas
 
 // The width and height of the screen
 const auto aspect_ratio = 1.0;
-const int gWidth = 400;
+const int gWidth = 640;
 const int gHeight = static_cast<int>(gWidth / aspect_ratio);
-const int max_depth = 50;
-const int samples_per_pixel = 800;
+const int max_depth = 64;
+const int samples_per_pixel = 2048;
 
 void rendering();
 
@@ -199,7 +199,7 @@ hittable_list cornell_box() {
 	hittable_list objects;
 
 	std::vector<std::vector<double>> rotation = { {3.535, -3.535, 0.0f}, {0.0f, 0.0f, -5.0f}, {3.535f, 3.535f, 0.0f}};
-	vec3 move(400.0f, 50.0f, 80.0f);
+	vec3 move(300.0f, 50.0f, 80.0f);
 
 	load_obj_model("../assets/SwordMinecraft.obj", make_shared<lambertian>(vec3(0.5, 0.7, 1.0)), objects, rotation, move);
 
@@ -213,18 +213,40 @@ hittable_list cornell_box() {
 	tex_data = stbi_load("../assets/3.jpg", &nx, &ny, &nn, 0);
 	auto emat3 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
 
+	tex_data = stbi_load("../assets/earthmap.jpg", &nx, &ny, &nn, 0);
+	auto emat4 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
+	objects.add(make_shared<sphere>(vec3(355, 390, 330), 80, emat4));
+
+	tex_data = stbi_load("../assets/R.jpg", &nx, &ny, &nn, 0);
+	auto emat5 = make_shared<lambertian>(make_shared<image_texture>(tex_data, nx, ny));
+
+	auto center1 = point3(350, 250, 200);
+	auto center2 = center1 + vec3(0, -30, 0);
+	auto moving_sphere_material = make_shared<lambertian>(vec3(1.0, 1.0, 0.5));
+	objects.add(make_shared<moving_sphere>(center1, center2, 0, 1, 50, moving_sphere_material));
+
 	auto red = make_shared<lambertian>(color(.65, .05, .05));
 	auto white = make_shared<lambertian>(color(.73, .73, .73));
 	auto green = make_shared<lambertian>(color(.12, .45, .15));
 	auto skyblue = make_shared<lambertian>(color(.5, .7, 1.0));
-	auto light = make_shared<diffuse_light>(make_shared<constant_texture>(vec3(15, 15, 15)));
+	auto light = make_shared<diffuse_light>(make_shared<constant_texture>(vec3(0.9, 1.0, 0.8)));
+	auto spotlight = make_shared<spot_light>(make_shared<constant_texture>(vec3(23, 25, 25)), vec3(0, -1, 0), 0.75, 0.15);
+	auto mirror = make_shared<metal>(vec3(0.5, 0.92, 1.0), 0.001);
+
 
 	objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
 	objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
-	objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
-	objects.add(make_shared<sphere>(point3(250, 100, 200), 30, light));
+	//objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+	// 球光源
+	 objects.add(make_shared<sphere>(point3(500, 65, 300), 30, light));
+
+	//聚光
+	objects.add((make_shared<xz_rect>(213, 343, 227, 332, 554, spotlight)));
+	//平行光源
+	objects.add((make_shared<xy_rect>(-200, 800, -200, 800, -810, light)));
+
 	objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
-	objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+	objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, mirror));
 	objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
 
 	shared_ptr<material> aluminum = make_shared<lambertian>(color(0.8, 0.85, 0.88));
@@ -244,7 +266,7 @@ hittable_list cornell_box() {
 	objects.add(chest);
 
 	auto glass = make_shared<dielectric>(1.5);
-	objects.add(make_shared<sphere>(point3(100, 45, 100), 45, glass));
+	objects.add(make_shared<sphere>(point3(100, 45, 100), 55, glass));
 
 	//shared_ptr<hittable> chest = make_shared<box>(point3(0, 0, 0), point3(100, 100, 100), emat1);
 	//chest = make_shared<rotate_y>(chest, -15);
@@ -436,8 +458,10 @@ void rendering()
 
 	auto lights = make_shared<hittable_list>();
 	lights->add(make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>()));
+	//lights->add(make_shared<sphere>(point3(190, 90, 190), 90, shared_ptr<material>()));
 	lights->add(make_shared<sphere>(point3(100, 45, 100), 45, shared_ptr<material>()));
-	lights->add(make_shared<sphere>(point3(250, 100, 200), 30, shared_ptr<material>()));
+	lights->add(make_shared<sphere>(point3(500, 65, 300), 30, shared_ptr<material>()));
+
 	hittable_list world = cornell_box();
 
 	bvh_node tree(world, 0, 1);
